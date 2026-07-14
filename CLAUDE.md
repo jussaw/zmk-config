@@ -2,28 +2,45 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## What this is
+
+A personal [ZMK](https://zmk.dev) config repo that hosts **one or more keyboards**. It follows the
+standard `zmk-config` layout, so adding a keyboard is a drop-in — no restructuring. Currently the
+only keyboard is the [Corne](#corne).
+
+Each keyboard is:
+- a `config/<board>.keymap` + `config/<board>.conf` pair (ZMK matches these to a shield by name; the
+  `_left`/`_right` side suffix is stripped, so `corne_left`/`corne_right` both read `config/corne.*`), plus
+- one or more `include:` entries in `build.yaml` (the build matrix).
+
+`config/west.yml` (the west manifest) and `build.yaml` are **shared** across all keyboards. To add a
+keyboard: add its `config/<board>.*` files, append its board/shield combo(s) to `build.yaml` with an
+`artifact-name`, and — only if it needs extra modules — add a remote/project to `config/west.yml`.
+
 ## Build
 
-Firmware is built entirely via GitHub Actions — there is no local build step. Push to `main` (or open a PR) to trigger a build. Download `.uf2` artifacts from the Actions run and flash each half via USB.
+Firmware is built entirely via GitHub Actions — there is no local build step. Push to `main` (or open a PR) to trigger a build. Download `.uf2` artifacts from the Actions run (named per each target's `artifact-name` in `build.yaml`) and flash via USB.
 
-The left half (`corne_left`) is built with ZMK Studio support (`studio-rpc-usb-uart` snippet + `CONFIG_ZMK_STUDIO=y`); the right half is not.
-
-## Hardware
-
-- **Controllers**: nice!nano (board ID `nice_nano//zmk`)
-- **Shields**: `corne_left` / `corne_right` with `nice_view_adapter` and `nice_view_gem`
-- **Display module**: [nice-view-gem](https://github.com/M165437/nice-view-gem) — pulled via `config/west.yml` from the `m165437` remote at `main`
+For the Corne, the left half (`corne_left`) is built with ZMK Studio support (`studio-rpc-usb-uart` snippet + `CONFIG_ZMK_STUDIO=y`); the right half is not.
 
 ## Architecture
 
 | File | Purpose |
 |---|---|
-| `config/corne.keymap` | All layers and custom behaviors (DeviceTree syntax) |
-| `config/corne.conf` | Kconfig options (display, BLE, sleep, pointing) |
-| `config/west.yml` | West manifest — pins ZMK and nice-view-gem dependencies |
-| `build.yaml` | GitHub Actions matrix — defines which board/shield/snippet combos to build |
+| `config/<board>.keymap` | Per-keyboard layers and custom behaviors, DeviceTree syntax (e.g. `config/corne.keymap`) |
+| `config/<board>.conf` | Per-keyboard Kconfig options — display, BLE, sleep, pointing (e.g. `config/corne.conf`) |
+| `config/west.yml` | Shared west manifest — pins ZMK and module dependencies |
+| `build.yaml` | Shared GitHub Actions matrix — one `include` entry per board/shield/snippet target |
 
-## Layers
+## Corne
+
+### Hardware
+
+- **Controllers**: nice!nano (board ID `nice_nano//zmk`)
+- **Shields**: `corne_left` / `corne_right` with `nice_view_adapter` and `nice_view_gem`
+- **Display module**: [nice-view-gem](https://github.com/M165437/nice-view-gem) — pulled via `config/west.yml` from the `m165437` remote at `main`
+
+### Layers
 
 ```
 0  BASE      — Colemak-DH, home row mods (LGUI/LALT/LCTL/LSFT on A R S T)
@@ -36,7 +53,7 @@ The left half (`corne_left`) is built with ZMK Studio support (`studio-rpc-usb-u
 
 Bluetooth profiles are assigned: BT0 = Windows desktop, BT1 = Personal MBA, BT2 = Work MBP.
 
-## Custom Behaviors
+### Custom Behaviors
 
 - **`hm` (home_row_mod)**: `tap-preferred` hold-tap, 200 ms tapping term, `require-prior-idle-ms = 125`. Used on home row for modifier access.
 - **`HYPER`** (`#define`): expands to `LC(LS(LA(LGUI)))`, used as `&kp HYPER` on the left thumb key of every layer.
