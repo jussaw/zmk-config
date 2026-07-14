@@ -18,3 +18,5 @@ zephyr/
 # Python
 __pycache__/
 *.pyc
+
+.zmk/
