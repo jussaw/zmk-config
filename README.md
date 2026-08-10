@@ -52,9 +52,9 @@ The full ASCII layout for every layer lives in the comments above each layer blo
 
 | Profile | Device |
 |---|---|
-| BT0 | Windows desktop |
-| BT1 | Personal MacBook Air |
-| BT2 | Work MacBook Pro |
+| BT0 | jussaw-pc |
+| BT1 | jussaw-laptop |
+| BT2 | jussaw-work |
 | BT3 / BT4 | unassigned |
 
 Select a profile from the `SETTINGS` layer; `BT CLR` clears the current profile's pairing.
