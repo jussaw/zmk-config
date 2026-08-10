@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A personal [ZMK](https://zmk.dev) config repo that hosts **one or more keyboards**. It follows the
 standard `zmk-config` layout, so adding a keyboard is a drop-in — no restructuring. Currently the
-only keyboard is the [Corne](#corne).
+only keyboard is a Corne split.
 
 Each keyboard is:
 - a `config/<board>.keymap` + `config/<board>.conf` pair (ZMK matches these to a shield by name; the
@@ -17,46 +17,25 @@ Each keyboard is:
 keyboard: add its `config/<board>.*` files, append its board/shield combo(s) to `build.yaml` with an
 `artifact-name`, and — only if it needs extra modules — add a remote/project to `config/west.yml`.
 
-## Build
+## Read the README first
 
-Firmware is built entirely via GitHub Actions — there is no local build step. Push to `main` (or open a PR) to trigger a build. Download `.uf2` artifacts from the Actions run (named per each target's `artifact-name` in `build.yaml`) and flash via USB.
+[`README.md`](README.md) is the source of truth for everything about the hardware and the build — it
+is deliberately **not** duplicated here, because the copy in this file drifted out of date. Consult
+it for:
 
-For the Corne, the left half (`corne_left`) is built with ZMK Studio support (`studio-rpc-usb-uart` snippet + `CONFIG_ZMK_STUDIO=y`); the right half is not.
-
-## Architecture
-
-| File | Purpose |
+| Topic | Section |
 |---|---|
-| `config/<board>.keymap` | Per-keyboard layers and custom behaviors, DeviceTree syntax (e.g. `config/corne.keymap`) |
-| `config/<board>.conf` | Per-keyboard Kconfig options — display, BLE, sleep, pointing (e.g. `config/corne.conf`) |
-| `config/west.yml` | Shared west manifest — pins ZMK and module dependencies |
-| `build.yaml` | Shared GitHub Actions matrix — one `include` entry per board/shield/snippet target |
+| Layers, keymap layout, bluetooth profile assignments | *Corne → Layers* |
+| Hardware, board IDs, shields, displays | *Corne → Hardware* |
+| Custom behaviors (`hm`, `HYPER`, `socd`) | *Corne → Custom behaviors* |
+| Pointing/mouse tuning and power settings | *Corne → Pointing / mouse*, *Power* |
+| Building in CI or locally via `build.sh`, and flashing | *Building & flashing* |
+| Repository layout | *Repository layout* |
+| Dependency pins and how to bump them | *Dependencies* |
 
-## Corne
-
-### Hardware
-
-- **Controllers**: nice!nano (board ID `nice_nano//zmk`)
-- **Shields**: `corne_left` / `corne_right` with `nice_view_adapter` and `nice_view_gem`
-- **Display module**: [nice-view-gem](https://github.com/M165437/nice-view-gem) — pulled via `config/west.yml` from the `m165437` remote at `main`
-
-### Layers
-
-```
-0  BASE      — Colemak-DH, home row mods (LGUI/LALT/LCTL/LSFT on A R S T)
-1  LOWER     — Symbols (!, @, #…) and brackets; LOWER+UPPER → ADJUST
-2  UPPER     — Numbers, F-keys, navigation; UPPER+LOWER → ADJUST
-3  ADJUST    — Media keys, mouse movement, and scroll (conditional layer: LOWER+UPPER)
-4  SETTINGS  — Bluetooth profile selection (BT0–BT4), game toggle
-5  GAME      — QWERTY, no home row mods, modifier keys on bottom row
-```
-
-Bluetooth profiles are assigned: BT0 = Windows desktop, BT1 = Personal MBA, BT2 = Work MBP.
-
-### Custom Behaviors
-
-- **`hm` (home_row_mod)**: `tap-preferred` hold-tap, 200 ms tapping term, `require-prior-idle-ms = 125`. Used on home row for modifier access.
-- **`HYPER`** (`#define`): expands to `LC(LS(LA(LGUI)))`, used as `&kp HYPER` on the left thumb key of every layer.
+Two constraints worth knowing before touching `config/west.yml`: every project is pinned to a commit
+SHA, and `zmk` and `nice-view-gem` must be bumped **together** — the module tracks ZMK's internal
+API. The README's *Dependencies* section has the procedure.
 
 ## Git Commits
 
