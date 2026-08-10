@@ -37,6 +37,33 @@ Two constraints worth knowing before touching `config/west.yml`: every project i
 SHA, and `zmk` and `nice-view-gem` must be bumped **together** — the module tracks ZMK's internal
 API. The README's *Dependencies* section has the procedure.
 
+## Verify the build before pushing
+
+**Never push a change to firmware inputs that hasn't been built locally.** ZMK keymap and Kconfig
+errors only surface at compile time, so a bad edit that looks fine on the page fails in CI — or
+worse, produces firmware that flashes but misbehaves.
+
+This applies only to files the firmware build actually reads:
+
+| Changed | Build first? |
+|---|---|
+| `config/<board>.keymap`, `config/<board>.conf` | **Yes** — the affected keyboard |
+| `build.yaml`, `config/west.yml` | **Yes** — every keyboard the change touches |
+| `boards/` (shield or board definitions) | **Yes** — every keyboard using them |
+| `README.md`, `CLAUDE.md`, in-file comments | No |
+| `.gitignore`, `.vscode/`, `.github/`, `build.sh`, other tooling | No |
+
+When it applies, run the local build for **every** affected keyboard and confirm it succeeds before
+`git push`:
+
+```bash
+./build.sh corne        # one invocation per affected keyboard
+```
+
+Committing locally is fine — the gate is on pushing. If the build fails, report the compiler output
+and fix it rather than pushing. See *Building & flashing* in [`README.md`](README.md) for what
+`build.sh` does and its requirements (Docker or Podman).
+
 ## Git Commits
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): summary`. Keep the summary in lowercase, imperative mood ("add", not "added"/"adds"), with no trailing period and ≤ 72 characters. Add a body (blank line, then prose) only when the *why* isn't obvious from the summary.
