@@ -179,17 +179,44 @@ bind-mount labeling itself.
 ### Flashing
 
 Put each half/board into bootloader mode (double-tap reset) and copy its `.uf2` onto the USB drive it
-exposes (e.g. `NICENANO`).
-
-For the Corne, the left half is built with **ZMK Studio** support (`studio-rpc-usb-uart` snippet +
-`CONFIG_ZMK_STUDIO=y`), so it can be edited live via [ZMK Studio](https://zmk.dev/docs/features/studio);
-the right half is built without it.
+exposes (e.g. `NICENANO`). Both Corne halves are built identically, so there's no left/right
+difference beyond the shield.
 
 ## Dependencies
 
-Pinned in [`config/west.yml`](config/west.yml), all tracking `main` (add more with
-`zmk module add <url>`; refresh the CLI's local copies with `zmk update`):
+Every project in [`config/west.yml`](config/west.yml) is pinned to a **commit SHA**, so any two
+builds of the same commit are identical (add more with `zmk module add <url>`; refresh the CLI's
+local copies with `zmk update`):
 
-- [`zmk`](https://github.com/zmkfirmware/zmk) — core firmware
-- [`nice-view-gem`](https://github.com/M165437/nice-view-gem) — custom display module (Corne)
-- [`zmk-behavior-socd`](https://github.com/nguyendown/zmk-behavior-socd) — SOCD cleaning behavior (Corne)
+| Project | Purpose | Pinned at |
+|---|---|---|
+| [`zmk`](https://github.com/zmkfirmware/zmk) | Core firmware | `268b1b1e` — main @ 2026-08-06 |
+| [`nice-view-gem`](https://github.com/M165437/nice-view-gem) | Custom display module (Corne) | `0a50fe20` — main @ 2026-02-27 |
+| [`zmk-behavior-socd`](https://github.com/nguyendown/zmk-behavior-socd) | SOCD cleaning behavior (Corne) | `0e3dfdeb` — main @ 2025-05-25 |
+
+These track `main` rather than a release tag deliberately. ZMK's latest release, `v0.3.0`
+(2025-08-01), predates the [Zephyr 4.1 migration](https://zmk.dev/blog/2025/12/09/zephyr-4-1) — it
+still uses the old board layout, where `nice_nano` means the **v1**. Pinning to it would mean
+reverting `nice_nano//zmk` to `nice_nano_v2` and giving up a year of upstream fixes.
+
+> [!IMPORTANT]
+> **Bump `zmk` and `nice-view-gem` together, never one alone.** The module tracks ZMK's internal
+> API — when ZMK renamed `zmk_endpoints_selected()` to `zmk_endpoint_get_selected()`, nice-view-gem
+> needed a matching commit four days later. Its README puts it plainly: *"Always pin both ZMK and
+> this module to matching revisions."*
+
+### Bumping the pins
+
+Nothing notifies you when upstream moves, by design — ZMK `main` gets commits most days, so a
+scheduled check would be near-constant noise. Bump when you're already editing the keymap:
+
+```bash
+for r in zmkfirmware/zmk M165437/nice-view-gem nguyendown/zmk-behavior-socd; do
+  printf '%-32s %s\n' "$r" "$(gh api "repos/$r/commits/main" --jq .sha)"
+done
+```
+
+1. Update the `revision:` lines in [`config/west.yml`](config/west.yml) (and the table above).
+2. Verify locally with `PRISTINE=1 ./build.sh corne` — the `PRISTINE=1` matters, or `west update`
+   reuses the cached workspace and you won't actually exercise the new SHAs.
+3. Push and confirm CI is green before flashing.
