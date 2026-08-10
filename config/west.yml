@@ -1,6 +1,6 @@
 manifest:
-  defaults:
-    revision: main
+  # Every project is pinned to a commit SHA for reproducible builds. Keep zmk and
+  # nice-view-gem in lockstep — the module tracks ZMK's API (see README).
   remotes:
     - name: zmkfirmware
       url-base: https://github.com/zmkfirmware
@@ -15,12 +15,13 @@ manifest:
   projects:
     - name: zmk
       remote: zmkfirmware
+      revision: 268b1b1e82150460f00fd701bcd08583d5c75d29 # main @ 2026-08-06
       import: app/west.yml
     - name: nice-view-gem
       remote: m165437
-      revision: main
+      revision: 0a50fe209d929c916c5664c6affd0f4977c6b012 # main @ 2026-02-27
     - name: zmk-behavior-socd
       remote: nguyendown
-      revision: main
+      revision: 0e3dfdeb382dea3449e132b44a36acf41527d0dc # main @ 2025-05-25
   self:
     path: config
